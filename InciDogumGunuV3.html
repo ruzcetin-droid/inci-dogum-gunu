@@ -22,6 +22,7 @@
             justify-content: center;
             overflow: hidden;
             position: relative;
+            user-select: none;
         }
 
         canvas {
@@ -210,7 +211,7 @@
             opacity: 1;
         }
 
-        /* Mini Müzik Çalar (Sol Alt Köşe) */
+        /* Sürüklenebilir Mini Müzik Çalar */
         .music-player {
             position: fixed;
             bottom: 20px;
@@ -228,6 +229,11 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.8s ease;
+            cursor: grab; /* Tutulabilir olduğunu gösterir */
+        }
+
+        .music-player:active {
+            cursor: grabbing;
         }
 
         .music-player.visible {
@@ -297,7 +303,7 @@
         <div class="typing-text" id="typewriter"></div>
     </div>
 
-    <!-- Mini Müzik Çalar (Klasördeki Kısa Dosya Adlarıyla Eşleşti) -->
+    <!-- Sürüklenebilir Mini Müzik Çalar -->
     <div class="music-player" id="musicPlayer">
         <div class="equalizer">
             <div class="bar"></div>
@@ -577,6 +583,56 @@
                 }, 800);
             }
         });
+
+        // --- Müzik Çaları Sürüklenebilir Yapma (Mouse ve Dokunmatik / Mobil Destekli) ---
+        let isDragging = false;
+        let startX, startY, initialX, initialY;
+
+        musicPlayer.addEventListener('mousedown', dragStart);
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', dragEnd);
+
+        musicPlayer.addEventListener('touchstart', dragStart, { passive: true });
+        document.addEventListener('touchmove', drag, { passive: true });
+        document.addEventListener('touchend', dragEnd);
+
+        function dragStart(e) {
+            // Eğer doğrudan şarkı seçme kutusuna tıklandıysa sürüklemeyi engelleme, bırak normal seçsin
+            if (e.target.tagName === 'SELECT') return;
+
+            isDragging = true;
+            const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+
+            startX = clientX;
+            startY = clientY;
+
+            const rect = musicPlayer.getBoundingClientRect();
+            initialX = rect.left;
+            initialY = rect.top;
+
+            musicPlayer.style.bottom = 'auto';
+            musicPlayer.style.left = 'auto';
+            musicPlayer.style.top = initialY + 'px';
+            musicPlayer.style.left = initialX + 'px';
+        }
+
+        function drag(e) {
+            if (!isDragging) return;
+
+            const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+
+            const dx = clientX - startX;
+            const dy = clientY - startY;
+
+            musicPlayer.style.left = (initialX + dx) + 'px';
+            musicPlayer.style.top = (initialY + dy) + 'px';
+        }
+
+        function dragEnd() {
+            isDragging = false;
+        }
 
         animate();
     </script>
