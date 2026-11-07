@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İnci için Doğum Günü</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #090a0f;
+            color: #f8fafc;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Başlangıç Ekranı */
+        .start-overlay {
+            position: absolute;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 1s ease, visibility 1s;
+        }
+
+        /* Vinil Plak */
+        .vinyl-btn {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: repeating-radial-gradient(
+                #111 0px,
+                #111 2px,
+                #222 3px,
+                #111 4px
+            );
+            border: 4px solid #333;
+            box-shadow: 0 0 35px rgba(251, 113, 133, 0.3), inset 0 0 15px rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            animation: spin 8s linear infinite;
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        .vinyl-btn:hover {
+            transform: scale(1.08);
+            box-shadow: 0 0 50px rgba(251, 113, 133, 0.6);
+        }
+
+        .vinyl-center {
+            width: 46px;
+            height: 46px;
+            background: #fb7185;
+            border-radius: 50%;
+            border: 4px solid #090a0f;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .vinyl-hole {
+            width: 10px;
+            height: 10px;
+            background: #090a0f;
+            border-radius: 50%;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Gitar Penası */
+        .guitar-pick {
+            position: absolute;
+            top: -150px;
+            right: -150px;
+            width: 65px;
+            height: 75px;
+            background: linear-gradient(145deg, #fb7185, #e11d48);
+            border: 2px solid #fff;
+            border-radius: 50% 50% 40% 40% / 30% 30% 70% 70%;
+            box-shadow: 0 0 25px rgba(251, 113, 133, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: #fff;
+            z-index: 12;
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .guitar-pick.strum {
+            opacity: 1;
+            top: 30px;
+            right: 20px;
+            transform: rotate(-35deg) scale(1.2);
+        }
+
+        .start-text {
+            margin-top: 28px;
+            font-size: 0.85rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: #94a3b8;
+            font-weight: 400;
+        }
+
+        /* Mesaj Kartı */
+        .card-container {
+            position: absolute;
+            bottom: -200px;
+            z-index: 5;
+            max-width: 520px;
+            width: 90%;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 32px 28px;
+            text-align: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7);
+        }
+
+        .card-container.visible {
+            opacity: 1;
+            pointer-events: auto;
+            bottom: 8%;
+        }
+
+        .card-container h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2rem;
+            color: #fff;
+            margin-bottom: 14px;
+            font-weight: 600;
+        }
+
+        .card-container h2 span {
+            color: #fb7185;
+            font-style: italic;
+        }
+
+        .typing-text {
+            color: #cbd5e1;
+            font-size: 1rem;
+            line-height: 1.7;
+            font-weight: 300;
+            min-height: 70px;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1rem;
+            background-color: #fb7185;
+            margin-left: 3px;
+            animation: blink 0.8s infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .hint-text {
+            position: absolute;
+            top: 25px;
+            z-index: 3;
+            color: #64748b;
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            opacity: 0;
+            transition: opacity 1.5s ease;
+        }
+
+        .hint-text.visible {
+            opacity: 1;
+        }
+
+        /* Mini Müzik Çalar (Sol Alt Köşe) */
+        .music-player {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 20;
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(12px);
+            padding: 10px 16px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease;
+        }
+
+        .music-player.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .music-select {
+            background: transparent;
+            border: none;
+            color: #cbd5e1;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 0.85rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .music-select option {
+            background: #0f172a;
+            color: #fff;
+        }
+
+        .equalizer {
+            display: flex;
+            align-items: flex-end;
+            gap: 3px;
+            height: 16px;
+        }
+
+        .bar {
+            width: 3px;
+            background: #fb7185;
+            animation: bounce 1.2s infinite ease-in-out;
+        }
+
+        .bar:nth-child(2) { animation-delay: 0.2s; }
+        .bar:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            0%, 100% { height: 4px; }
+            50% { height: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="canvas"></canvas>
+
+    <!-- Plak & Pena Butonu -->
+    <div class="start-overlay" id="startOverlay">
+        <div style="position: relative;">
+            <div class="vinyl-btn" onclick="startExperience()">
+                <div class="vinyl-center">
+                    <div class="vinyl-hole"></div>
+                </div>
+            </div>
+            <div class="guitar-pick" id="guitarPick">🎸</div>
+        </div>
+        <div class="start-text">Başlatmak İçin Plaka Tıkla</div>
+    </div>
+
+    <div class="hint-text" id="hintText">Mumları üflemek için ekrana tıkla</div>
+
+    <!-- Mesaj Kartı -->
+    <div class="card-container" id="card">
+        <h2>İyi ki doğdun, <span>İnci!</span></h2>
+        <div class="typing-text" id="typewriter"></div>
+    </div>
+
+    <!-- Mini Müzik Çalar (Klasördeki Kısa Dosya Adlarıyla Eşleşti) -->
+    <div class="music-player" id="musicPlayer">
+        <div class="equalizer">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+        </div>
+        <select class="music-select" id="musicSelect" onchange="changeMusic()">
+            <option value="505.mp3">Arctic Monkeys - 505</option>
+            <option value="Sweather.mp3">The Neighbourhood - Sweater Weather</option>
+            <option value="Cowboys.mp3">George Michael - Cowboys and Angels</option>
+            <option value="Sandman.mp3">Metallica - Enter Sandman</option>
+        </select>
+    </div>
+
+    <!-- Audio Elementi -->
+    <audio id="audio" loop></audio>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const audio = document.getElementById('audio');
+        const musicSelect = document.getElementById('musicSelect');
+        const musicPlayer = document.getElementById('musicPlayer');
+        const overlay = document.getElementById('startOverlay');
+        const pick = document.getElementById('guitarPick');
+        const card = document.getElementById('card');
+        const hintText = document.getElementById('hintText');
+        const typewriterEl = document.getElementById('typewriter');
+
+        let width, height;
+        let particles = [];
+        let confetti = [];
+        let trailParticles = [];
+        let state = 'waiting';
+        let candlesBlown = false;
+
+        const messageText = "Yeni yaşın sana hayatın en güzel sürprizlerini, tükenmeyen neşeyi ve tüm hayallerini getirsin. İyi ki varsın, nice mutlu ve güzel senelere! ✨";
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Fare izi piksel tozları
+        window.addEventListener('mousemove', (e) => {
+            if (state !== 'waiting') {
+                for (let i = 0; i < 2; i++) {
+                    trailParticles.push({
+                        x: e.clientX,
+                        y: e.clientY,
+                        vx: (Math.random() - 0.5) * 2,
+                        vy: (Math.random() - 0.5) * 2,
+                        size: Math.random() * 3 + 1,
+                        color: Math.random() > 0.5 ? '#fb7185' : '#38bdf8',
+                        alpha: 1
+                    });
+                }
+            }
+        });
+
+        function getTargetPixels() {
+            const targets = [];
+            const cx = width / 2;
+            const cy = height / 2 + 30;
+
+            for (let x = -140; x <= 140; x += 6) {
+                for (let y = 40; y <= 110; y += 6) {
+                    targets.push({ x: cx + x, y: cy + y, color: '#f43f5e', type: 'cake' });
+                }
+            }
+            for (let x = -100; x <= 100; x += 6) {
+                for (let y = -20; y <= 40; y += 6) {
+                    targets.push({ x: cx + x, y: cy + y, color: '#fda4af', type: 'cake' });
+                }
+            }
+            for (let x = -140; x <= 140; x += 8) {
+                targets.push({ x: cx + x, y: cy + 40, color: '#ffffff', type: 'decor' });
+            }
+
+            const candleOffsets = [-60, 0, 60];
+            candleOffsets.forEach(offX => {
+                for (let y = -70; y <= -20; y += 5) {
+                    targets.push({ x: cx + offX, y: cy + y, color: '#ffffff', type: 'candle' });
+                }
+            });
+
+            candleOffsets.forEach((offX, idx) => {
+                for (let r = 0; r < 14; r += 3) {
+                    targets.push({
+                        x: cx + offX + (Math.random() - 0.5) * 8,
+                        y: cy - 80 - Math.random() * 14,
+                        color: Math.random() > 0.4 ? '#fbbf24' : '#f97316',
+                        type: 'flame',
+                        flameIndex: idx
+                    });
+                }
+            });
+
+            return targets;
+        }
+
+        class Particle {
+            constructor(target) {
+                const angle = Math.random() * Math.PI * 2;
+                const dist = Math.max(width, height) * (0.8 + Math.random() * 0.5);
+                this.x = width / 2 + Math.cos(angle) * dist;
+                this.y = height / 2 + Math.sin(angle) * dist;
+                
+                this.targetX = target.x;
+                this.targetY = target.y;
+                this.color = target.color;
+                this.type = target.type;
+
+                this.size = Math.random() * 2.5 + 2;
+                this.speed = 0.02 + Math.random() * 0.025;
+                this.alpha = Math.random() * 0.8 + 0.2;
+            }
+
+            update() {
+                if (state === 'assembling' || state === 'complete' || state === 'blown') {
+                    this.x += (this.targetX - this.x) * this.speed;
+                    this.y += (this.targetY - this.y) * this.speed;
+
+                    if (this.type === 'flame' && !candlesBlown) {
+                        this.x += (Math.random() - 0.5) * 1.2;
+                        this.y += (Math.random() - 0.5) * 1.2;
+                    }
+
+                    if (this.type === 'flame' && candlesBlown) {
+                        this.targetY -= 3;
+                        this.alpha -= 0.015;
+                    }
+                }
+            }
+
+            draw() {
+                if (this.alpha <= 0) return;
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = this.type === 'flame' ? 12 : 4;
+                ctx.shadowColor = this.color;
+                ctx.fillRect(this.x, this.y, this.size, this.size);
+                ctx.restore();
+            }
+        }
+
+        class Confetti {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = height + Math.random() * 50;
+                this.vx = (Math.random() - 0.5) * 4;
+                this.vy = -(Math.random() * 10 + 8);
+                this.size = Math.random() * 6 + 4;
+                this.color = ['#fb7185', '#fbbf24', '#38bdf8', '#a855f7', '#f43f5e'][Math.floor(Math.random() * 5)];
+                this.gravity = 0.2;
+                this.alpha = 1;
+                this.rotation = Math.random() * 360;
+                this.rotSpeed = (Math.random() - 0.5) * 10;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.vy += this.gravity;
+                this.y += this.vy;
+                this.rotation += this.rotSpeed;
+                if (this.vy > 0) this.alpha -= 0.008;
+            }
+
+            draw() {
+                if (this.alpha <= 0) return;
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.translate(this.x, this.y);
+                ctx.rotate((this.rotation * Math.PI) / 180);
+                ctx.fillStyle = this.color;
+                ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
+                ctx.restore();
+            }
+        }
+
+        function initParticles() {
+            const targets = getTargetPixels();
+            particles = targets.map(t => new Particle(t));
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+
+            trailParticles.forEach((tp, idx) => {
+                tp.x += tp.vx;
+                tp.y += tp.vy;
+                tp.alpha -= 0.02;
+                if (tp.alpha <= 0) {
+                    trailParticles.splice(idx, 1);
+                    return;
+                }
+                ctx.save();
+                ctx.globalAlpha = tp.alpha;
+                ctx.fillStyle = tp.color;
+                ctx.fillRect(tp.x, tp.y, tp.size, tp.size);
+                ctx.restore();
+            });
+
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            confetti.forEach((c, idx) => {
+                c.update();
+                c.draw();
+                if (c.alpha <= 0) confetti.splice(idx, 1);
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        function changeMusic() {
+            audio.src = musicSelect.value;
+            audio.play().catch(() => {});
+        }
+
+        function startExperience() {
+            pick.classList.add('strum');
+
+            setTimeout(() => {
+                overlay.style.opacity = '0';
+                overlay.style.visibility = 'hidden';
+
+                audio.src = musicSelect.value;
+                audio.play().catch(() => console.log("Ses oynatımı engellendi"));
+                
+                musicPlayer.classList.add('visible');
+
+                initParticles();
+                state = 'assembling';
+
+                setTimeout(() => {
+                    state = 'complete';
+                    hintText.classList.add('visible');
+                }, 3000);
+            }, 450);
+        }
+
+        function startTypewriter() {
+            let index = 0;
+            typewriterEl.innerHTML = '<span class="cursor"></span>';
+            const cursor = typewriterEl.querySelector('.cursor');
+
+            const interval = setInterval(() => {
+                if (index < messageText.length) {
+                    cursor.insertAdjacentText('beforebegin', messageText[index]);
+                    index++;
+                } else {
+                    clearInterval(interval);
+                }
+            }, 45);
+        }
+
+        window.addEventListener('click', (e) => {
+            if (state !== 'complete' || candlesBlown) return;
+
+            if (!e.target.closest('.card-container') && !e.target.closest('.start-overlay') && !e.target.closest('.music-player')) {
+                candlesBlown = true;
+                hintText.classList.remove('visible');
+
+                for (let i = 0; i < 90; i++) {
+                    confetti.push(new Confetti());
+                }
+
+                setTimeout(() => {
+                    card.classList.add('visible');
+                    startTypewriter();
+                }, 800);
+            }
+        });
+
+        animate();
+    </script>
+</body>
+</html>
